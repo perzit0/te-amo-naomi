@@ -112,44 +112,10 @@ canvas#fx{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-in
 .candles button:active{transform:translate(2px,2px);box-shadow:1px 1px 0 var(--ink)}
 .candles button:focus-visible{outline:3px dashed var(--bar-2);outline-offset:3px}
 
-/* Torta con 20 velas */
-.cake{--frost:#fffaf6;--sponge:#f59bbb;--sponge-2:#b99be8;--flame:#ff7a2f;--smoke:#9c8f98;
-  display:flex;flex-direction:column;align-items:center;width:min(340px,100%);margin:0 auto;padding-top:26px}
-.rows{position:relative;width:78%;height:58px;z-index:2}
-.row{position:absolute;left:0;right:0;display:flex;justify-content:space-between}
-.row.back{bottom:16px;padding:0 18px}
-.row.front{bottom:-10px;padding:0 6px}
-.candle{position:relative;width:8px;height:34px;border:2px solid var(--ink);border-radius:3px;
-  background:repeating-linear-gradient(135deg,var(--frost) 0 5px,var(--bar) 5px 9px)}
-.row.back .candle{height:30px;background:repeating-linear-gradient(135deg,var(--frost) 0 5px,var(--bar-2) 5px 9px)}
-.flame{position:absolute;left:50%;bottom:100%;width:11px;height:17px;margin:0 0 2px -5.5px;
-  border-radius:50% 50% 50% 50%/60% 60% 40% 40%;
-  background:radial-gradient(ellipse at 50% 72%,#fff7c2 0 22%,var(--gold) 45%,var(--flame) 85%);
-  box-shadow:0 0 10px 3px rgba(255,180,60,.55);
-  transform-origin:50% 100%;animation:flick .35s ease-in-out infinite alternate;
-  transition:transform .25s ease,opacity .25s ease}
-.candle:nth-child(odd) .flame{animation-duration:.42s;animation-delay:-.2s}
-@keyframes flick{0%{transform:scaleY(1) rotate(-4deg)}100%{transform:scaleY(1.18) rotate(4deg)}}
-.smoke{position:absolute;left:50%;bottom:100%;width:8px;height:8px;margin-left:-4px;border-radius:50%;background:var(--smoke);opacity:0;pointer-events:none}
-.candle.out .flame{animation:none;transform:scale(0);opacity:0}
-.candle.out .smoke{animation:smoke 1.4s ease-out forwards}
-.candle.out .smoke+.smoke{animation-delay:.18s}
-@keyframes smoke{0%{opacity:.75;transform:translate(0,0) scale(.6)}100%{opacity:0;transform:translate(8px,-46px) scale(2.6)}}
-.tier{position:relative;border:3px solid var(--ink);border-radius:10px 10px 6px 6px;overflow:hidden}
-.tier::before{content:"";position:absolute;left:0;right:0;top:0;height:24px;
-  background:radial-gradient(circle at 9px 13px,var(--frost) 9px,transparent 9.5px) 0 0/18px 24px repeat-x,
-             linear-gradient(var(--frost),var(--frost)) 0 0/100% 13px no-repeat}
-.tier.top{width:78%;height:64px;background:var(--sponge);
-  background-image:radial-gradient(var(--gold) 1.5px,transparent 2px),radial-gradient(var(--frost) 1.5px,transparent 2px);
-  background-size:22px 18px,26px 22px;background-position:4px 30px,14px 38px}
-.tier.bottom{width:92%;height:84px;margin-top:-3px;background:var(--sponge-2);display:grid;place-items:center}
-.tier.bottom::before{background:radial-gradient(circle at 9px 13px,var(--sponge) 9px,transparent 9.5px) 0 0/18px 24px repeat-x,
-             linear-gradient(var(--sponge),var(--sponge)) 0 0/100% 13px no-repeat}
-.tier.bottom b{position:relative;font-family:var(--display);font-weight:400;font-size:2.4rem;color:var(--frost);
-  text-shadow:2px 2px 0 var(--ink);padding-top:14px;line-height:1}
-.plate{width:100%;height:14px;margin-top:-3px;background:var(--frost);border:3px solid var(--ink);border-radius:50%}
-.wish{margin:10px 0 0;text-align:center;font-size:1.5rem;font-weight:700;color:var(--bar);min-height:1.5em}
-
+/* Torta pixel art */
+.cake{width:min(320px,100%);margin:0 auto}
+.cake canvas{display:block;width:100%;height:auto;aspect-ratio:1;image-rendering:pixelated;image-rendering:crisp-edges}
+.wish{margin:0;text-align:center;font-size:1.5rem;font-weight:700;color:var(--bar);min-height:1.5em}
 .statusbar{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;border-top:3px solid var(--ink);padding:4px 12px;font-family:var(--mono);font-size:1.1rem;background:var(--paper)}
 
 @media (max-width:860px){
@@ -161,7 +127,6 @@ canvas#fx{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-in
 @media (prefers-reduced-motion:reduce){
   .hero h1 span{animation:none}
   .panel,.panel:hover{transition:none}
-  .flame{animation:none}
 }
 </style>
 </head>
@@ -202,12 +167,7 @@ canvas#fx{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-in
 
       <div class="candles"><button id="boom" type="button">¡Sopla las velitas!</button></div>
 
-      <div class="cake" role="img" aria-label="Torta de cumpleaños con 20 velas">
-        <div class="rows"><div class="row back" id="rowBack"></div><div class="row front" id="rowFront"></div></div>
-        <div class="tier top"></div>
-        <div class="tier bottom"><b>20</b></div>
-        <div class="plate"></div>
-      </div>
+      <div class="cake"><canvas id="cakecv" width="64" height="64" role="img" aria-label="Torta de cumpleaños con velas en forma de 2 y 0"></canvas></div>
       <p class="wish" id="wish" aria-live="polite"></p>
     </section>
 
@@ -251,26 +211,68 @@ canvas#fx{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-in
   tick();
   const b=document.getElementById('boom');
   const wish=document.getElementById('wish');
-  const mk=()=>{const d=document.createElement('span');d.className='candle';d.innerHTML='<span class="flame"></span><span class="smoke"></span><span class="smoke"></span>';return d};
-  for(let i=0;i<10;i++){rowBack.appendChild(mk());rowFront.appendChild(mk())}
-  const candles=[...document.querySelectorAll('.candle')];
+  // ---- Torta pixel art (lienzo de 64x64, escalado con píxeles nítidos) ----
+  const cv=document.getElementById('cakecv'),g=cv.getContext('2d');
+  const INK='#3b2233',PINK='#f59bbb',PINK_HI='#ffc4d6',PINK_LO='#e07fa2',LIL='#b99be8',LIL_HI='#d3c0f5',LIL_LO='#9a7fd0',CREAM='#fffaf6',GOLD='#f2b134',PURP='#7d5cc6',RED='#b43e6b';
+  const R=(x,y,w,h,c)=>{g.fillStyle=c;g.fillRect(x,y,w,h)};
+  const D2=['01110','10001','00001','00010','00100','01000','11111'];
+  const D0=['01110','10001','10001','10001','10001','10001','01110'];
+  const candlesPx=[{bmp:D2,x0:20,fill:RED,lit:true},{bmp:D0,x0:34,fill:PURP,lit:true}];
+  const FL=[['..o..','.ooo.','.oyo.','ooyoo','oywyo','oywyo','.ooo.'],['.o...','.oo..','.oyo.','ooyoo','oywyo','oywyo','.ooo.'],['...o.','..oo.','.oyo.','ooyoo','oywyo','oywyo','.ooo.'],['..o..','..o..','.oyo.','.oyoo','oywyo','oywyo','.ooo.']];
+  const FC={o:'#ff7a2f',y:GOLD,w:'#fff7c2'};
+  let smoke=[];
+  function digit(c){
+    const y0=15,cells=new Set();
+    c.bmp.forEach((row,r)=>[...row].forEach((v,k)=>{if(v==='1')for(let a=0;a<2;a++)for(let b=0;b<2;b++)cells.add((c.x0+k*2+a)+','+(y0+r*2+b))}));
+    cells.forEach(s=>{const[x,y]=s.split(',').map(Number);for(let dx=-1;dx<=1;dx++)for(let dy=-1;dy<=1;dy++){const k=(x+dx)+','+(y+dy);if(!cells.has(k))R(x+dx,y+dy,1,1,INK)}});
+    cells.forEach(s=>{const[x,y]=s.split(',').map(Number);R(x,y,1,1,(x+y)%6===0?CREAM:c.fill)});
+    R(c.x0+5,11,1,4,INK);
+  }
+  function flame(c,f){
+    const fx=c.x0+3,fy=4;
+    g.fillStyle='rgba(255,190,70,.28)';g.fillRect(fx-1,fy+1,7,6);g.fillRect(fx,fy-1,5,9);
+    f.forEach((row,r)=>[...row].forEach((v,k)=>{if(v!=='.')R(fx+k,fy+r,1,1,FC[v])}));
+  }
+  function cake(){
+    g.clearRect(0,0,64,64);
+    R(4,50,56,5,INK);R(5,51,54,2,CREAM);R(5,53,54,1,'#e3d3de');
+    R(8,25,48,26,INK);R(9,26,46,24,LIL);R(9,32,2,18,LIL_HI);R(52,32,3,18,LIL_LO);
+    R(9,41,46,2,CREAM);R(9,43,46,1,PINK);
+    R(9,26,46,6,PINK);R(9,26,46,1,PINK_HI);
+    g.clearRect(8,25,1,1);g.clearRect(55,25,1,1);R(9,26,1,1,INK);R(54,26,1,1,INK);
+    [[11,3],[15,1],[18,4],[23,2],[27,3],[31,1],[34,4],[39,2],[43,3],[47,1],[50,3]].forEach(([x,l])=>{R(x,32,2,l,PINK);R(x,31+l,2,1,PINK_LO)});
+    [[12,28,GOLD],[16,30,CREAM],[14,27,PURP],[11,30,GOLD],[45,28,GOLD],[49,30,PURP],[52,27,CREAM],[47,27,CREAM],[44,30,CREAM],[50,28,GOLD],[31,29,GOLD],[18,28,PURP]].forEach(([x,y,c])=>R(x,y,1,1,c));
+    ['xx.xx','xxxxx','.xxx.','..x..'].forEach((row,r)=>[...row].forEach((v,k)=>{if(v==='x')R(29+k,35+r,1,1,RED)}));
+    candlesPx.forEach(digit);
+  }
+  let last=0,frames=[0,2];
+  function loop(t){
+    if(t-last>130){last=t;frames=frames.map(()=>reduce?0:Math.floor(Math.random()*FL.length))}
+    cake();
+    candlesPx.forEach((c,i)=>{if(c.lit)flame(c,FL[frames[i]])});
+    smoke=smoke.filter(p=>p.a>0);
+    for(const p of smoke){p.x+=p.vx;p.y+=p.vy;p.a-=.01;const s=p.a>.5?2:1;g.fillStyle='rgba(156,143,152,'+p.a.toFixed(2)+')';g.fillRect(Math.round(p.x),Math.round(p.y),s,s)}
+    requestAnimationFrame(loop);
+  }
+  requestAnimationFrame(loop);
+  function blow(i){
+    const c=candlesPx[i];c.lit=false;if(reduce)return;
+    for(let k=0;k<10;k++)setTimeout(()=>smoke.push({x:c.x0+5,y:6,vx:(Math.random()-.5)*.25,vy:-.18-Math.random()*.2,a:.85}),k*70);
+  }
   let lit=true,busy=false;
   b.addEventListener('click',()=>{
     if(busy)return;
     if(lit){
-      busy=true;
-      const order=candles.slice().sort(()=>Math.random()-.5);
-      const step=reduce?0:90;
-      order.forEach((c,i)=>setTimeout(()=>c.classList.add('out'),i*step));
+      busy=true;blow(0);setTimeout(()=>blow(1),reduce?0:450);
       setTimeout(()=>{
-        const r=document.querySelector('.cake').getBoundingClientRect();
-        add(170,{x:(r.left+r.width/2)*devicePixelRatio,y:(r.top+40)*devicePixelRatio});
+        const r=cv.getBoundingClientRect();
+        add(170,{x:(r.left+r.width/2)*devicePixelRatio,y:(r.top+r.height*.2)*devicePixelRatio});
         wish.textContent='¡Feliz cumple, Nami! Pide un deseo';
         b.textContent='Volver a encender las velas';
         lit=false;busy=false;
-      },order.length*step+350);
+      },reduce?0:1100);
     }else{
-      candles.forEach(c=>c.classList.remove('out'));
+      candlesPx.forEach(c=>c.lit=true);smoke=[];
       wish.textContent='';b.textContent='¡Sopla las velitas!';lit=true;
     }
   });
