@@ -112,6 +112,44 @@ canvas#fx{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-in
 .candles button:active{transform:translate(2px,2px);box-shadow:1px 1px 0 var(--ink)}
 .candles button:focus-visible{outline:3px dashed var(--bar-2);outline-offset:3px}
 
+/* Torta con 20 velas */
+.cake{--frost:#fffaf6;--sponge:#f59bbb;--sponge-2:#b99be8;--flame:#ff7a2f;--smoke:#9c8f98;
+  display:flex;flex-direction:column;align-items:center;width:min(340px,100%);margin:0 auto;padding-top:26px}
+.rows{position:relative;width:78%;height:58px;z-index:2}
+.row{position:absolute;left:0;right:0;display:flex;justify-content:space-between}
+.row.back{bottom:16px;padding:0 18px}
+.row.front{bottom:-10px;padding:0 6px}
+.candle{position:relative;width:8px;height:34px;border:2px solid var(--ink);border-radius:3px;
+  background:repeating-linear-gradient(135deg,var(--frost) 0 5px,var(--bar) 5px 9px)}
+.row.back .candle{height:30px;background:repeating-linear-gradient(135deg,var(--frost) 0 5px,var(--bar-2) 5px 9px)}
+.flame{position:absolute;left:50%;bottom:100%;width:11px;height:17px;margin:0 0 2px -5.5px;
+  border-radius:50% 50% 50% 50%/60% 60% 40% 40%;
+  background:radial-gradient(ellipse at 50% 72%,#fff7c2 0 22%,var(--gold) 45%,var(--flame) 85%);
+  box-shadow:0 0 10px 3px rgba(255,180,60,.55);
+  transform-origin:50% 100%;animation:flick .35s ease-in-out infinite alternate;
+  transition:transform .25s ease,opacity .25s ease}
+.candle:nth-child(odd) .flame{animation-duration:.42s;animation-delay:-.2s}
+@keyframes flick{0%{transform:scaleY(1) rotate(-4deg)}100%{transform:scaleY(1.18) rotate(4deg)}}
+.smoke{position:absolute;left:50%;bottom:100%;width:8px;height:8px;margin-left:-4px;border-radius:50%;background:var(--smoke);opacity:0;pointer-events:none}
+.candle.out .flame{animation:none;transform:scale(0);opacity:0}
+.candle.out .smoke{animation:smoke 1.4s ease-out forwards}
+.candle.out .smoke+.smoke{animation-delay:.18s}
+@keyframes smoke{0%{opacity:.75;transform:translate(0,0) scale(.6)}100%{opacity:0;transform:translate(8px,-46px) scale(2.6)}}
+.tier{position:relative;border:3px solid var(--ink);border-radius:10px 10px 6px 6px;overflow:hidden}
+.tier::before{content:"";position:absolute;left:0;right:0;top:0;height:24px;
+  background:radial-gradient(circle at 9px 13px,var(--frost) 9px,transparent 9.5px) 0 0/18px 24px repeat-x,
+             linear-gradient(var(--frost),var(--frost)) 0 0/100% 13px no-repeat}
+.tier.top{width:78%;height:64px;background:var(--sponge);
+  background-image:radial-gradient(var(--gold) 1.5px,transparent 2px),radial-gradient(var(--frost) 1.5px,transparent 2px);
+  background-size:22px 18px,26px 22px;background-position:4px 30px,14px 38px}
+.tier.bottom{width:92%;height:84px;margin-top:-3px;background:var(--sponge-2);display:grid;place-items:center}
+.tier.bottom::before{background:radial-gradient(circle at 9px 13px,var(--sponge) 9px,transparent 9.5px) 0 0/18px 24px repeat-x,
+             linear-gradient(var(--sponge),var(--sponge)) 0 0/100% 13px no-repeat}
+.tier.bottom b{position:relative;font-family:var(--display);font-weight:400;font-size:2.4rem;color:var(--frost);
+  text-shadow:2px 2px 0 var(--ink);padding-top:14px;line-height:1}
+.plate{width:100%;height:14px;margin-top:-3px;background:var(--frost);border:3px solid var(--ink);border-radius:50%}
+.wish{margin:10px 0 0;text-align:center;font-size:1.5rem;font-weight:700;color:var(--bar);min-height:1.5em}
+
 .statusbar{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;border-top:3px solid var(--ink);padding:4px 12px;font-family:var(--mono);font-size:1.1rem;background:var(--paper)}
 
 @media (max-width:860px){
@@ -123,6 +161,7 @@ canvas#fx{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-in
 @media (prefers-reduced-motion:reduce){
   .hero h1 span{animation:none}
   .panel,.panel:hover{transition:none}
+  .flame{animation:none}
 }
 </style>
 </head>
@@ -162,6 +201,14 @@ canvas#fx{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-in
       </article>
 
       <div class="candles"><button id="boom" type="button">¡Sopla las velitas!</button></div>
+
+      <div class="cake" role="img" aria-label="Torta de cumpleaños con 20 velas">
+        <div class="rows"><div class="row back" id="rowBack"></div><div class="row front" id="rowFront"></div></div>
+        <div class="tier top"></div>
+        <div class="tier bottom"><b>20</b></div>
+        <div class="plate"></div>
+      </div>
+      <p class="wish" id="wish" aria-live="polite"></p>
     </section>
 
     <section class="col" aria-label="Más fotos">
@@ -184,7 +231,7 @@ canvas#fx{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-in
   const size=()=>{W=c.width=innerWidth*devicePixelRatio;H=c.height=innerHeight*devicePixelRatio};
   size();addEventListener('resize',size);
   const add=(n,burst)=>{for(let i=0;i<n;i++)parts.push({
-    x:burst?W/2:Math.random()*W,y:burst?H*.45:-20*devicePixelRatio,
+    x:burst?burst.x:Math.random()*W,y:burst?burst.y:-20*devicePixelRatio,
     vx:burst?(Math.random()-.5)*14:(Math.random()-.5)*.8,
     vy:burst?-Math.random()*14-4:Math.random()*1.2+.6,
     s:(Math.random()*6+5)*devicePixelRatio,r:Math.random()*6,vr:(Math.random()-.5)*.2,
@@ -203,7 +250,30 @@ canvas#fx{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-in
   }
   tick();
   const b=document.getElementById('boom');
-  b.addEventListener('click',()=>{add(160,true);b.textContent='¡Feliz cumple, Nami!'});
+  const wish=document.getElementById('wish');
+  const mk=()=>{const d=document.createElement('span');d.className='candle';d.innerHTML='<span class="flame"></span><span class="smoke"></span><span class="smoke"></span>';return d};
+  for(let i=0;i<10;i++){rowBack.appendChild(mk());rowFront.appendChild(mk())}
+  const candles=[...document.querySelectorAll('.candle')];
+  let lit=true,busy=false;
+  b.addEventListener('click',()=>{
+    if(busy)return;
+    if(lit){
+      busy=true;
+      const order=candles.slice().sort(()=>Math.random()-.5);
+      const step=reduce?0:90;
+      order.forEach((c,i)=>setTimeout(()=>c.classList.add('out'),i*step));
+      setTimeout(()=>{
+        const r=document.querySelector('.cake').getBoundingClientRect();
+        add(170,{x:(r.left+r.width/2)*devicePixelRatio,y:(r.top+40)*devicePixelRatio});
+        wish.textContent='¡Feliz cumple, Nami! Pide un deseo';
+        b.textContent='Volver a encender las velas';
+        lit=false;busy=false;
+      },order.length*step+350);
+    }else{
+      candles.forEach(c=>c.classList.remove('out'));
+      wish.textContent='';b.textContent='¡Sopla las velitas!';lit=true;
+    }
+  });
 })();
 </script>
 
